@@ -1,0 +1,454 @@
+
+Chapter 3:
+In the Chapter 1 case study, you designed the new database for City Jail. Now you need to create all the tables for the database. First, create all the tables using the information outlined in Section A. Second, make the modifications outlined in Section B. Save all SQL statements used to accomplish these tasks.
+1.	Section B
+a.	Add a default value of U for the Classification column of the Crimes table.
+i.	ALTER TABLE crimes
+
+MODIFY classification DEFAULT 'U';
+
+b.	Add a column named Date_Recorded to the Crimes table. This column needs to hold date values and should be set to the current date by default.
+i.	ALTER TABLE crimes
+ADD(date_recorded DATE DEFAULT SYSDATE);
+
+c.	Add a column to the Prob_officers table to contain the pager number for each officer. The column needs to accommodate a phone number, including area code. Name the column Pager#.
+i.	ALTER TABLE prob_officers
+ADD(pager# NUMBER(10));
+
+d.	Change the Alias column in the Aliases table to accommodate up to 20 Characters.
+i.	ALTER TABLE aliases
+MODIFY(alias VARCHAR2(20));
+
+
+Chapter 4:
+In previous chapters, you have designed and created tables for the City Jail database. These tables don’t include any constraints. Review the information in Chapters 1 and 3 case studies to determine what constraints you might need for the City Jail database. First, using the format in the following chart, create a list of constraints needed. Second, create and execute all the SQL statements needed to add these constraints. Follow these steps to create and alter the tables
+
+1.	First, drop the APPEALS, CRIME_OFFICERS, and CRIME_CHARGES tables constructed in Chapter 3. These three tables are to be built last, using a CREATE TABLE command that includes all the necessary constraints.
+a.	DROP TABLE Appeals;
+DROP TABLE Crime_officers;
+DROP TABLE Crime_charges;
+2.	Second, use the ALTER TABLE command to add all constraints to the existing tables. Note that the sequence of constraint addition has an impact. Any tables referenced by FOREIGN
+KEYs must already have the PRIMARY KEY created.
+3.	Third, use the CREATE TABLE command, including all constraints, to build the three tables dropped in the first step.
+a.	CREATE TABLE Appeals
+(Appeal_ID NUMBER(5),
+	Crime_ID Number(9,0),
+	Filing_date DATE,
+	Hearing_date DATE,
+	Status CHAR(1) DEFAULT 'P',
+		CONSTRAINT Appeals_Appeal_ID_pk PRIMARY KEY(Appeal_ID),
+		CONSTRAINT Appeals_Crime_ID_fk FOREIGN KEY(Crime_ID)
+			REFERENCES Crimes(Crime_ID));
+
+CREATE TABLE Crime_officers
+(Crime_ID NUMBER(9,0),
+	Officer_ID NUMBER(8,0),
+		CONSTRAINT Crime_o_CrimeOfficerID_pk PRIMARY KEY(Crime_ID, Officer_ID));
+
+CREATE TABLE Crime_charges
+(Charge_ID NUMBER(10,0),
+	Crime_ID NUMBER(9,0),
+	Crime_code NUMBER(3,0),
+	Charge_status CHAR(2),
+	Fine_amount NUMBER(7,2),
+	Court_fee NUMBER(7,2),
+	Amount_paID NUMBER(7,2),
+	Pay_due_date DATE,
+		CONSTRAINT Crime_charges_Charge_ID_pk PRIMARY KEY(Charge_ID),
+		CONSTRAINT Crime_charges_Crime_ID_fk FOREIGN KEY(Crime_ID)
+			REFERENCES Crimes(Crime_ID),
+		CONSTRAINT Crime_charges_Crime_code_fk FOREIGN KEY (Crime_code)
+			REFERENCES Crime_codes(Crime_code));
+
+ 
+Chapter 5:
+Execute the CityJail_5.sql script to rebuild the CRIMINALS and CRIMES tables of the City Jail database. The statements at the beginning of this script drop existing tables in your schema with the same table names.
+1.	Create and execute statements to perform the following DML activities. Save the changes permanently to the database.
+a.	Create a script to allow a user to add new criminals (providing prompts to the user) to the CRIMINALS table.
+i.	INSERT INTO Criminals (Criminal_ID, Last, First, Street, City, State, Zip, Phone, V_Status, P_status)
+	VALUES (:Criminal_ID, :Last, :First, :Street, :City, :State, :Zip, :Phone, :V_Status,:P_status);
+b.	Add the following criminals, using the script created in the previous step. No value needs to be entered at the prompt if it should be set to the DEFAULT column value. Query the CRIMINALS table to confirm that new rows have been added.
+i.	 
+ii.	 
+iii.	Select * FROM CRIMINALS
+iv.	 
+
+c.	Add a column named Mail_flag to the CRIMINALS table. The column should be assigned a datatype of CHAR(1).
+i.	ALTER TABLE Criminals
+	ADD (Mail_flag CHAR(1));
+d.	Set the Mail_flag column to a value of ‘Y’ for all criminals.
+i.	UPDATE Criminals
+	SET Mail_flag='Y';
+e.	Set the Mail_flag column to ‘N’ for all criminals who don’t have a street address recorded in the database.
+i.	UPDATE Criminals
+	SET Mail_flag='N'
+	WHERE Street IS NULL;
+f.	Change the phone number for criminal 1016 to 7225659032.
+i.	UPDATE Criminals
+	SET Phone='7225659032'
+	WHERE Criminal_ID=1016;
+g.	Remove criminal 1017 from the database.
+i.	DELETE FROM Criminals
+	WHERE Criminal_ID=1017;
+commit;
+
+2.	Execute a DML statement to accomplish each of the following actions. Each statement produces a constraint error. Document the error number and message, and briefly explain the cause of the error. If your DML statement generates a syntax error rather than a constraint violation error, revise your statement to correct any syntax errors. You can review the CityJail_5.sql file to identify table constraints.
+a.	Add a crime record using the following data: Crime_ID = 100, Criminal_ID = 1010,Classification = M, Date_charged = July 15, 2009, Status = PD
+i.	INSERT INTO Crimes (Crime_ID, Criminal_ID, Classification, Date_charged, Status)
+	VALUES(100,1010,'M','15-JUL-09', 'PD');
+ii.	    --Violates Status Check constraint. Status must be "CL","CA","IA"
+
+b.	Add a crime record using the following data: Crime_ID = 130, Criminal_ID = 1016, Classification = M, Date_charged = July 15, 2009, Status = PD.
+i.	INSERT INTO Crimes (Crime_ID, Criminal_ID, Classification, Date_charged, Status)
+	VALUES(130,1016,'M', '15-JUL-09','PD');
+ii.	--Violates Status Check constraint. Status must be "CL","CA","IA"
+c.	Add a crime record using the following data: Crime_ID = 130, Criminal_ID = 1016, Classification = P, Date_charged = July 15, 2009, Status = CL.
+i.	INSERT INTO Crimes (Crime_ID, Criminal_ID, Classification, Date_charged, Status)
+	VALUES(130,1016,'P', '15-JUL-09','CL');
+ii.	--Violates Class Check constraint. Class must be "F", "M","O", “U”
+
+Chapter 6:
+1.	The head DBA has requested the creation of a sequence for the primary key columns of the Criminals and Crimes tables. After creating the sequences, add a new criminal named Johnny Capps to the Criminals table by using the correct sequence. (Use any values for the remainder of columns.) A crime needs to be added for the criminal, too. Add a row to the Crimes table, referencing the sequence value already generated for the Criminal_ID and using the correct sequence to generate the Crime_ID value. (Use any values for the remainder of columns.)
+a.	CREATE SEQUENCE criminal_id_seq
+	INCREMENT BY 1
+	START WITH 1017
+	NOCACHE
+	NOCYCLE;
+
+CREATE SEQUENCE crime_id_seq
+	INCREMENT BY 1
+	START WITH 1
+	NOCACHE
+	NOCYCLE;
+
+INSERT INTO Criminals (criminal_id, first, last, city, state, zip)
+	VALUES (criminal_id_seq.NEXTVAL, 'Johnny', 'Capps', 'Dearborn', 'MI', 48126);
+
+INSERT INTO Crimes (crime_id, criminal_id, classification, date_charged, status, hearing_date, appeal_cut_date)
+VALUES(crime_id_seq.NEXTVAl,criminal_id_seq.CURRVAl, 'F','15-NOV-09','CL','17-NOV-09','19-NOV-09');
+2.	The last name, street, and phone number columns of the Criminals table are used quite often in the WHERE clause condition of queries. Create objects that might improve data retrieval for these queries.
+
+CREATE INDEX criminal_name_idx
+	ON Criminals (last);
+
+
+CREATE INDEX criminal_street_idx
+	ON Criminals (street);
+
+
+CREATE INDEX criminal_phone_idx
+	ON Criminals (phone);
+
+
+Chapter 8:
+Note: Run the CityJail_8.sql file provided by your instructor to ensure that all necessary tables and constraints are available for this case study. This script isn’t included in
+student data files because case study assignments in previous chapters include table
+creation challenges. This script rebuilds the City Jail database. Don’t be concerned with
+errors from the DROP TABLE commands, which delete any existing tables of the same names.
+The following list reflects common data requests from city managers. Write the
+SQL statements to satisfy the requests. If the query can be accomplished by using
+different operators, supply alternative solutions so that the performance-tuning group can test them and identify the more efficient statements. Test the statements and show
+execution results
+
+1.	List all criminal aliases beginning with the letter B.
+a.	SELECT ALIAS
+FROM ALIASES
+WHERE ALIAS LIKE 'B%';
+b.	 
+
+
+2.	List all crimes that occurred (were charged) during the month October 2008. List the crime ID, criminal ID, date charged, and classification.
+a.	SELECT CRIME_ID, CRIMINAL_ID, DATE_CHARGED, CLASSIFICATION
+FROM CRIMES
+WHERE DATE_CHARGED BETWEEN '01-OCT-08' AND '31-OCT-08';
+b.	 
+3.	List all crimes with a status of CA (can appeal) or IA (in appeal). List the crime ID, criminal ID, date charged, and status.
+a.	SELECT CRIME_ID, CRIMINAL_ID, DATE_CHARGED, STATUS 
+FROM CRIMES 
+WHERE STATUS IN ('CA','IA');
+b.	 
+4.	List all crimes classified as a felony. List the crime ID, criminal ID, date charged, and classification.
+a.	SELECT CRIME_ID, CRIMINAL_ID, DATE_CHARGED, CLASSIFICATION
+FROM CRIMES	
+WHERE CLASSIFICATION='F';
+b.	 
+5.	List all crimes with a hearing date more than 14 days after the date charged. List the crime ID, criminal ID, date charged, and hearing date.
+a.	SELECT CRIME_ID, CRIMINAL_ID, DATE_CHARGED, HEARING_DATE
+FROM CRIMES
+WHERE HEARING_DATE>DATE_CHARGED+14;
+b.	 
+6.	List all criminals with the zip code 23510. List the criminal ID, last name, and zip code. Sort the list by criminal ID.
+a.	SELECT CRIMINAL_ID, LAST, ZIP
+FROM CRIMINALS
+WHERE ZIP='23510'
+ORDER BY CRIMINAL_ID DESC;
+b.	 
+7.	List all crimes that don’t have a hearing date scheduled. List the crime ID, criminal ID, date charged, and hearing date.
+a.	SELECT CRIME_ID, CRIMINAL_ID, DATE_CHARGED, HEARING_DATE
+FROM CRIMES
+WHERE HEARING_DATE IS NULL;
+
+b.	 
+8.	List all sentences with a probation officer assigned. List the sentence ID, criminal ID, and probation officer ID. Sort the list by probation officer ID and then criminal ID.
+a.	SELECT SENTENCE_ID, CRIMINAL_ID, PROB_ID
+FROM SENTENCES
+WHERE PROB_ID IS NOT NULL
+ORDER BY PROB_ID, CRIMINAL_ID;
+b.	 
+9.	List all crimes that are classified as misdemeanors and are currently in appeal. List the crime ID, criminal ID, classification, and status.
+a.	SELECT CRIME_ID, CRIMINAL_ID, CLASSIFICATION, STATUS
+FROM CRIMES
+WHERE CLASSIFICATION='M' AND STATUS='IA';
+b.	 
+
+10.	List all crime charges with a balance owed. List the charge ID, crime ID, fine amount, court fee, amount paid, and amount owed.
+a.	SELECT CHARGE_ID, CRIME_ID, FINE_AMOUNT, AMOUNT_PAID, (FINE_AMOUNT - AMOUNT_PAID) AS AMOUNT_OWED
+	FROM CRIME_CHARGES
+	WHERE (FINE_AMOUNT - AMOUNT_PAID)>0;
+b.	 
+11.	List all police officers who are assigned to the precinct OCVW or GHNT and have a status of active. List the officer ID, last name, precinct, and status. Sort the list by precinct and then by officer last name
+a.	SELECT OFFICER_ID, LAST, PRECINCT, STATUS
+FROM OFFICERS
+WHERE PRECINCT IN ('OCVW','GHNT') AND STATUS='A'
+ORDER BY PRECINCT, LAST;
+b.	 
+Chapter 9:
+	Note: Use the City Jail database created with the CityJail_8.sql script that you ran for the Chapter 8 case study.The following list reflects the current data requests from city managers. Provide the SQL statements that satisfy the requests. For each request, include one solution using the traditional method and one using an ANSI JOIN statement. Test the statements and show execution results.
+
+1.	List all criminals along with the crime charges filed. The report needs to include the criminal ID, name, crime code, and fine amount.
+a.	SELECT CRIMINAL_ID, LAST, FIRST, CRIME_CODE, FINE_AMOUNT
+FROM CRIMINALS NATURAL JOIN CRIMES NATURAL JOIN CRIME_CHARGES;
+b.	 
+2.	List all criminals along with crime status and appeal status (if applicable). The reports need to include the criminal ID, name, crime classification, date charged, appeal filing date, and appeal status. Show all criminals, regardless of whether they have filed an appeal.
+a.	SELECT CRIMINAL_ID, LAST, FIRST,CLASSIFICATION, DATE_CHARGED, CRIME_ID, FILING_DATE, A.STATUS
+FROM CRIMINALS NATURAL JOIN CRIMES LEFT OUTER JOIN APPEALS A
+USING(CRIME_ID)
+ORDER BY LAST;
+b.	 
+3.	List all criminals along with crime information. The report needs to include the criminal ID, name, crime classification, date charged, crime code, and fine amount. Include only crimes classified as “Other.” Sort the list by criminal ID and date charged.
+a.	SELECT CRIMINAL_ID, LAST, FIRST, CLASSIFICATION, DATE_CHARGED, CRIME_CODE, FINE_AMOUNT
+FROM CRIMINALS NATURAL JOIN CRIMES NATURAL JOIN CRIME_CHARGES
+WHERE CLASSIFICATION='O';
+b.	 
+4.	Create an alphabetical list of all criminals, including criminal ID, name, violent offender status, parole status, and any known aliases.
+a.	SELECT CRIMINAL_ID, LAST, FIRST, V_STATUS, P_STATUS, ALIAS FROM CRIMINALS FULL OUTER JOIN ALIASES USING (CRIMINAL_ID);
+b.	 
+
+5.	A table named Prob_Contact contains the required frequency of contact with a probation officer, based on the length of the probation period (the number of days assigned to probation). Review the data in this table, which indicates ranges for the number of days and applicable contact frequencies. Create a list containing the name of each criminal who has been assigned a probation period, which is indicated by the sentence type. The list should contain the criminal name, probation start date, probation end date, and required frequency of contact. Sort the list by criminal name and probation start date.
+a.	SELECT c.last, c.first, s.start_date, s.end_date, p.con_freq
+FROM criminals c
+JOIN sentences s
+ON s.type = 'P'
+JOIN prob_contact p
+ON s.end_date - s.start_date >= p.low_amt
+AND s.end_date - s.start_date <= p.high_amt
+ORDER BY last, first, start_date;
+b.	 
+Excerpt from larger section
+6.	A column named Mgr_ID has been added to the Prob_Officers table and contains the ID number of the probation supervisor for each officer. Produce a list showing each probation officer’s name and his or her supervisor’s name. Sort the list alphabetically by probation officer name.
+a.	SELECT PO.LAST, PO.FIRST, POM.LAST AS SUPERVISOR_LAST, POM.FIRST AS SUPERVISOR_FIRST
+FROM PROB_OFFICERS PO, PROB_OFFICERS POM
+WHERE PO.MGR_ID=POM.PROB_ID(+)
+ORDER BY PO.LAST;
+b.	 
+ 
+Chapter 10:
+Note: Make sure you have run the CityJail_8.sql script from Chapter 8. This script makes all database objects available for completing this case study.
+The following list reflects current data requests from city managers. Provide the SQL statement to satisfy each request. Test the statements and show execution results.
+1.	List the following information for all crimes that have a period greater than 14 days between the date charged and the hearing date: crime ID, classification, date charged, hearing date, and number of days between the date charged and the hearing date.
+a.	SELECT CRIME_ID, CLASSIFICATION, DATE_CHARGED, HEARING_DATE, (HEARING_DATE-DATE_CHARGED)
+FROM CRIMES
+WHERE (HEARING_DATE-DATE_CHARGED) > 14;
+b.	 
+2.	Produce a list showing each active police officer and his or her community assignment, indicated by the second letter of the precinct code. Display the community description listed in the following chart, based on the second letter of the precinct code.
+a.	SELECT PRECINCT,
+CASE
+WHEN PRECINCT LIKE '_A%' THEN 'SHADY GROVE'
+WHEN PRECINCT LIKE '_B%' THEN 'CENTER CITY'
+WHEN PRECINCT LIKE '_C%' THEN 'BAY LANDING'
+ELSE 'NOT CURRENTLY ASSIGNED'
+END "COMMUNITY ASSIGNMENT"
+FROM OFFICERS
+WHERE STATUS='A';
+b.	 
+3.	Produce a list of sentencing information to include criminal ID, name (displayed in all uppercase letters), sentence ID, sentence start date, and length in months of the sentence.The number of months should be shown as a whole number. The start date should be displayed in the format “December 17, 2009.”
+a.	SELECT C.CRIMINAL_ID, UPPER(C.LAST), UPPER(C.FIRST), S.SENTENCE_ID, TO_CHAR(S.START_DATE, 'MONTH DD, YYYY') AS "START DATE", ROUND(MONTHS_BETWEEN(S.END_DATE,S.START_DATE)) AS "LENGTH OF SENTENCE"
+FROM CRIMINALS C, SENTENCES S
+WHERE C.CRIMINAL_ID=S.CRIMINAL_ID;
+b.	 
+4.	A list of all amounts owed is needed. Create a list showing each criminal name, charge ID, total amount owed (fine amount plus court fee), amount paid, amount owed, and payment due date. If nothing has been paid to date, the amount paid is NULL. Include only criminals who owe some amount of money. Display the dollar amounts with a dollar sign and two decimals.
+a.	SELECT LAST, FIRST, CHARGE_ID, TO_CHAR((FINE_AMOUNT+COURT_FEE), '$9999.99') AS "TOTAL AMOUNT OWED", TO_CHAR(AMOUNT_PAID,'$999.99') AS "AMOUNT PAID", TO_CHAR(((FINE_AMOUNT+COURT_FEE)-AMOUNT_PAID), '$9999.99') AS "AMOUNT OWED", PAY_DUE_DATE AS "PAY DUE DATE"
+FROM CRIMINALS NATURAL JOIN CRIMES NATURAL JOIN CRIME_CHARGES
+WHERE ((FINE_AMOUNT+COURT_FEE)-AMOUNT_PAID) >0;
+b.	 
+5.	Display the criminal name and probation start date for all criminals who have a probation period greater than two months. Also, display the date that’s two months from the beginning of the probation period, which will serve as a review date.
+a.	SELECT C.LAST, C.FIRST, S.START_DATE, ADD_MONTHS(START_DATE, 2) AS "PROBATION REVIEW HEARING"
+FROM CRIMINALS C NATURAL JOIN SENTENCES S
+WHERE TYPE='P'
+AND MONTHS_BETWEEN(END_DATE,START_DATE) > 2;
+b.	 
+6.	An INSERT statement is needed to support users adding a new appeal. Create an INSERT statement using substitution variables. Note that users will be entering dates in the format of a two-digit month, a two-digit day, and a four-digit year, such as “12 17 2009.” In addition, a sequence named APPEALS_ID_SEQ exists to supply values for the Appeal_ID column, and the default setting for the Status column should take effect (that is, the DEFAULT option on the column should be used). Test the statement by adding the following appeal: crime__ID  = 25344031, filing date = 02 13 2009, and hearing date = 02 27 2009.
+Chapter 11:
+Note: Make sure you have run the CityJail_8.sql script from Chapter 8. This script makes all database objects available to complete this case study. The city’s Crimes Analysis unit has submitted the following data requests. Provide the SQL statements to satisfy these requests. Test the statements and show the query results.
+1.	Show the average number of crimes reported by an officer.
+a.	SELECT AVG(COUNT(CRIME_ID))
+FROM CRIME_OFFICERS
+GROUP BY OFFICER_ID;
+b.	 
+2.	Show the total number of crimes by status.
+a.	SELECT COUNT(CRIME_ID), STATUS
+FROM CRIMES
+GROUP BY STATUS;
+b.	 
+3.	List the highest number of crimes committed by a person.
+a.	SELECT MAX(COUNT(CRIME_ID)) "Most Crimes by Single Person"
+FROM CRIMES
+GROUP BY CRIMINAL_ID;
+b.	 
+4.	Display the lowest fine amount assigned to a crime charge.
+a.	SELECT MIN(FINE_AMOUNT) "Lowest Fine"
+FROM CRIME_CHARGES;
+b.	 
+5.	List criminals (ID and name) who have multiple sentences assigned.
+a.	SELECT CRIMINAL_ID,LAST, FIRST,COUNT(SENTENCE_ID)
+FROM CRIMINALS JOIN SENTENCES USING(CRIMINAL_ID)
+GROUP BY CRIMINAL_ID,LAST, FIRST
+HAVING COUNT(SENTENCE_ID)>1;
+b.	 
+6.	List the total number of crime charges successfully defended (guilty status assigned) by precinct. Include only precincts with at least seven guilty charges.
+a.	SELECT PRECINCT,COUNT(CHARGE_STATUS)
+FROM CRIME_CHARGES NATURAL JOIN CRIME_OFFICERS NATURAL JOIN OFFICERS
+WHERE CHARGE_STATUS='GL'
+GROUP BY PRECINCT
+HAVING COUNT(CHARGE_STATUS)>7;
+b.	 
+
+7.	List the total amount of collections (fines and fees) and the total amount owed by crime classification group
+a.	SELECT CLASSIFICATION,TO_CHAR(SUM(FINE_AMOUNT+COURT_FEE),'$9,999.99') "Total Collections", TO_CHAR(SUM(FINE_AMOUNT+COURT_FEE-AMOUNT_PAID),'$9,999.99') "Amount Owed"
+	FROM CRIMES NATURAL JOIN CRIME_CHARGES
+	GROUP BY CLASSIFICATION;
+b.	 
+8.	Use single queries to address the following requests:
+9.	List the total number of charges by crime classification and charge status. Include a grand total in the results.
+a.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(CHARGE_ID) "Number of Charges"
+	FROM CRIMES NATURAL JOIN CRIME_CHARGES
+	GROUP BY ROLLUP (CLASSIFICATION,CHARGE_STATUS);
+b.	 
+10.	Perform the same task as in Question #8 and add the following: a) a subtotal by each crime classification and b) a subtotal for each charge status. Provide two different queries to accomplish this task.
+a.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(*)
+	FROM CRIMES NATURAL JOIN CRIME_CHARGES
+	GROUP BY GROUPING SETS ((CLASSIFICATION, CHARGE_STATUS), (CLASSIFICATION),(CHARGE_STATUS),());
+b.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(*)
+FROM CRIMES NATURAL JOIN CRIME_CHARGES
+GROUP BY CUBE (CHARGE_STATUS, CLASSIFICATION);
+c.	 
+11.	Perform the same task as in Question #8 and add a subtotal by each crime classification. Provide two different queries to accomplish this task.
+a.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(CHARGE_ID) "Number of Charges"
+	FROM CRIMES NATURAL JOIN CRIME_CHARGES
+	GROUP BY ROLLUP (CLASSIFICATION,CHARGE_STATUS);
+b.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(*)
+FROM CRIMES NATURAL JOIN CRIME_CHARGES
+GROUP BY GROUPING SETS ((CLASSIFICATION, CHARGE_STATUS), (CLASSIFICATION), ());
+c.	 
+
+Chapter 12:
+Make sure you have run the CityJail_8.sql script from Chapter 8. This script makes all database objects available for completing this case study. The city’s Crime Analysis unit has submitted the following data requests. Provide the SQL statements using subqueries to satisfy the requests. Test the statements and show execution results.
+1.	List the name of each officer who has reported more than the average number of crimes officers have reported.
+a.	SELECT LAST,FIRST 
+FROM OFFICERS JOIN CRIME_OFFICERS USING(OFFICER_ID) JOIN CRIMES USING (CRIME_ID)
+GROUP BY LAST,FIRST 
+HAVING COUNT (CRIME_ID)>
+    (SELECT AVG(COUNT(CRIME_ID)) 
+    FROM CRIMES JOIN CRIME_OFFICERS USING (CRIME_ID) 
+    GROUP BY OFFICER_ID); 
+b.	 
+2.	List the names of all criminals who have committed less than average number of crimes and aren’t listed as violent offenders.
+a.	SELECT LAST,FIRST 
+FROM CRIMINALS JOIN CRIMES USING(CRIMINAL_ID) 
+WHERE V_STATUS='N' GROUP BY FIRST,LAST 
+HAVING COUNT(CRIME_ID)<(SELECT AVG(COUNT(CRIME_ID)) 
+FROM CRIMES 
+GROUP BY CRIMINAL_ID); 
+b.	 
+3.	List appeal information for each appeal that has a less than average number of days between the filing and hearing dates.
+a.	SELECT appeal_id, filing_date, hearing_date, status
+FROM appeals
+WHERE (hearing_date - filing_date) < (
+SELECT AVG(hearing_date - filing_date)
+FROM appeals
+);
+b.	 
+4.	List the names of probation officers who have had a less than average number of criminals assigned.
+a.	SELECT FIRST,LAST 
+FROM PROB_OFFICERS 
+JOIN SENTENCES USING (PROB_ID) 
+GROUP BY FIRST,LAST 
+HAVING COUNT (CRIMINAL_ID)<(SELECT AVG(COUNT(CRIMINAL_ID))FROM SENTENCES GROUP BY PROB_ID); 
+b.	 
+5.	List each crime that has had the highest number of appeals recorded.
+a.	SELECT CRIME_ID, COUNT (APPEAL_ID) 
+FROM APPEALS 
+GROUP BY  CRIME_ID 
+HAVING COUNT (APPEAL_ID)=(SELECT MAX(COUNT(APPEAL_ID)) FROM APPEALS GROUP BY CRIME_ID);
+b.	 
+6.	List the information on crime charges for each charge that has had a fine above average and a sum paid below average.
+a.	SELECT *
+FROM crime_charges
+WHERE fine_amount > (SELECT AVG(fine_amount) FROM crime_charges)
+AND amount_paid < (SELECT AVG(amount_paid) FROM crime_charges);
+b.	 
+7.	List the names of all criminals who have had any of the crime code charges involved in crime ID 10089.
+a.	SELECT criminals.last || ' ' || criminals.first AS Name
+FROM criminals
+WHERE criminal_id IN(
+	SELECT criminal_id
+	FROM crimes
+WHERE crime_id = 10089
+);
+b.	 
+
+8.	Use a correlated subquery to determine which criminals have had at least one probation period assigned.
+a.	SELECT FIRST,LAST 
+FROM CRIMINALS
+WHERE EXISTS 
+(SELECT SENTENCE_ID 
+FROM SENTENCES 
+WHERE CRIMINALS.CRIMINAL_ID=SENTENCES.CRIMINAL_ID AND PROB_ID IS NOT NULL); 
+b.	 
+9.	List the names of officers who have booked the highest number of crimes. Note that more than one officer might be listed.
+a.	SELECT FIRST, LAST 
+FROM OFFICERS JOIN CRIME_OFFICERS USING(OFFICER_ID) GROUP BY FIRST, LAST 
+HAVING COUNT(CRIME_ID)=(SELECT MAX (COUNT(CRIME_ID))FROM CRIME_OFFICERS GROUP BY CRIME_ID);  
+b.	 
+Note: Use a MERGE statement to satisfy the following request:
+10.	The criminal data warehouse contains a copy of the CRIMINALS table that needs to be updated periodically from the production CRIMINALS table. The data warehouse table is named CRIMINALS_DW. Use a single SQL statement to update the data warehouse table to reflect any data changes for existing criminals and to add new criminals.
+a.	MERGE INTO CRIMINALS_DW A USING CRIMINALS B ON (A.CRIMINAL_ID=B.CRIMINAL_ID) WHEN MATCHED THEN UPDATE SET A.LAST=B.LAST, A.FIRST=B.FIRST, A.STREET=B.STREET, A.CITY=B.CITY, A.STATE=B.STATE,A.PHONE=B.PHONE,A.V_STATUS=B.V_STATUS, A.P_STATUS=B.P_STATUS WHEN NOT MATCHED THEN INSERT (CRIMINAL_ID,LAST,FIRST,STREET,CITY,STATE,ZIP,PHONE,V_STATUS,P_STATUS) VALUES(B.CRIMINAL_ID,B.LAST,B.FIRST,B.STREET,B.CITY,B.STATE,B.ZIP,B.PHONE,B.V_STATUS,B.P_STATUS); 
+b.	 
+Chapter 13:
+Note: This assignment assumes you have run the CityJail_8.sql script from Chapter 8, which makes all database objects available for completing this case study. The City Jail Technologies Department is constructing an application to allow users in the Crime Analysis Unit to query data more easily. This system requires creating a number of views, described in the following list. Provide the SQL statement to perform each task and test your views with a query.
+1.	Create a statement that always returns the names of the three criminals with the highest number of crimes committed.
+a.	SELECT FIRST, LAST
+FROM (SELECT FIRST, LAST, COUNT(CRIME_ID) CNT
+ FROM CRIMINALS JOIN CRIMES
+USING (CRIMINAL_ID)
+GROUP BY FIRST, LAST
+ORDER BY CNT DESC)
+ WHERE ROWNUM <=3;
+b.	 
+2.	Create a view that includes details for all crimes, including criminal ID, criminal name, criminal parole status, crime ID, date of crime charge, crime status, charge ID, crime code,charge status, pay due date, and amount due. This view shouldn’t allow performing any DML operations. Each time the view is used in the application, the data should be queried from the database. (For example, each use of the view should reflect the most current data in the database.)
+a.	CREATE VIEW  CRIME_VIEW
+AS SELECT CRIMINAL_ID, FIRST, LAST, P_STATUS, CRIME_ID, DATE_CHARGED, STATUS,
+CHARGE_ID, CRIME_CODE, CHARGE_STATUS, PAY_DUE_DATE, 
+NVL(COURT_FEE,0)+NVL(FINE_AMOUNT,0)-NVL(AMOUNT_PAID,0) DUE
+FROM CRIMINALS JOIN CRIMES USING (CRIMINAL_ID)
+JOIN CRIME_CHARGES USING (CRIME_ID);
+3.	Create a view that includes all data for officers, including the total number of crimes in which they participated in filing charges. To speed up the officer queries, store this view data and schedule the data to be updated every two weeks
+a.	CREATE MATERIALIZED VIEW OFFICER_INFO_VIEW
+REFRESH COMPLETE
+START WITH SYSDATE
+NEXT SYSDATE + 14
+AS SELECT OFFICER_ID, LAST, FIRST, PRECINCT, BADGE, PHONE, STATUS, COUNT(CRIME_ID) CNT
+FROM OFFICERS JOIN CRIME_OFFICERS USING (OFFICER_ID)
+GROUP BY OFFICER_ID, LAST, FIRST, PRECINCT, BADGE, PHONE, STATUS;
+b.	We get an error that we do not have the correct privileges.
+
