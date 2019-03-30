@@ -1,36 +1,21 @@
 
-Chapter 3:
-In the Chapter 1 case study, you designed the new database for City Jail. Now you need to create all the tables for the database. First, create all the tables using the information outlined in Section A. Second, make the modifications outlined in Section B. Save all SQL statements used to accomplish these tasks.
-1.	Section B
-a.	Add a default value of U for the Classification column of the Crimes table.
-i.	ALTER TABLE crimes
+
+ALTER TABLE crimes
 
 MODIFY classification DEFAULT 'U';
 
-b.	Add a column named Date_Recorded to the Crimes table. This column needs to hold date values and should be set to the current date by default.
-i.	ALTER TABLE crimes
 ADD(date_recorded DATE DEFAULT SYSDATE);
-
-c.	Add a column to the Prob_officers table to contain the pager number for each officer. The column needs to accommodate a phone number, including area code. Name the column Pager#.
-i.	ALTER TABLE prob_officers
+ALTER TABLE prob_officers
 ADD(pager# NUMBER(10));
 
-d.	Change the Alias column in the Aliases table to accommodate up to 20 Characters.
-i.	ALTER TABLE aliases
+ALTER TABLE aliases
 MODIFY(alias VARCHAR2(20));
 
-
-Chapter 4:
-In previous chapters, you have designed and created tables for the City Jail database. These tables don’t include any constraints. Review the information in Chapters 1 and 3 case studies to determine what constraints you might need for the City Jail database. First, using the format in the following chart, create a list of constraints needed. Second, create and execute all the SQL statements needed to add these constraints. Follow these steps to create and alter the tables
-
-1.	First, drop the APPEALS, CRIME_OFFICERS, and CRIME_CHARGES tables constructed in Chapter 3. These three tables are to be built last, using a CREATE TABLE command that includes all the necessary constraints.
-a.	DROP TABLE Appeals;
+DROP TABLE Appeals;
 DROP TABLE Crime_officers;
 DROP TABLE Crime_charges;
-2.	Second, use the ALTER TABLE command to add all constraints to the existing tables. Note that the sequence of constraint addition has an impact. Any tables referenced by FOREIGN
-KEYs must already have the PRIMARY KEY created.
-3.	Third, use the CREATE TABLE command, including all constraints, to build the three tables dropped in the first step.
-a.	CREATE TABLE Appeals
+
+CREATE TABLE Appeals
 (Appeal_ID NUMBER(5),
 	Crime_ID Number(9,0),
 	Filing_date DATE,
@@ -60,22 +45,12 @@ CREATE TABLE Crime_charges
 		CONSTRAINT Crime_charges_Crime_code_fk FOREIGN KEY (Crime_code)
 			REFERENCES Crime_codes(Crime_code));
 
- 
-Chapter 5:
-Execute the CityJail_5.sql script to rebuild the CRIMINALS and CRIMES tables of the City Jail database. The statements at the beginning of this script drop existing tables in your schema with the same table names.
-1.	Create and execute statements to perform the following DML activities. Save the changes permanently to the database.
-a.	Create a script to allow a user to add new criminals (providing prompts to the user) to the CRIMINALS table.
-i.	INSERT INTO Criminals (Criminal_ID, Last, First, Street, City, State, Zip, Phone, V_Status, P_status)
+INSERT INTO Criminals (Criminal_ID, Last, First, Street, City, State, Zip, Phone, V_Status, P_status)
 	VALUES (:Criminal_ID, :Last, :First, :Street, :City, :State, :Zip, :Phone, :V_Status,:P_status);
-b.	Add the following criminals, using the script created in the previous step. No value needs to be entered at the prompt if it should be set to the DEFAULT column value. Query the CRIMINALS table to confirm that new rows have been added.
-i.	 
-ii.	 
-iii.	Select * FROM CRIMINALS
-iv.	 
 
-c.	Add a column named Mail_flag to the CRIMINALS table. The column should be assigned a datatype of CHAR(1).
-i.	ALTER TABLE Criminals
-	ADD (Mail_flag CHAR(1));
+Select * FROM CRIMINALS
+ALTER TABLE Criminals
+ADD (Mail_flag CHAR(1));
 d.	Set the Mail_flag column to a value of ‘Y’ for all criminals.
 i.	UPDATE Criminals
 	SET Mail_flag='Y';
@@ -328,8 +303,7 @@ a.	SELECT CLASSIFICATION,TO_CHAR(SUM(FINE_AMOUNT+COURT_FEE),'$9,999.99') "Total 
 	FROM CRIMES NATURAL JOIN CRIME_CHARGES
 	GROUP BY CLASSIFICATION;
 b.	 
-8.	Use single queries to address the following requests:
-9.	List the total number of charges by crime classification and charge status. Include a grand total in the results.
+8.	
 a.	SELECT CLASSIFICATION, CHARGE_STATUS, COUNT(CHARGE_ID) "Number of Charges"
 	FROM CRIMES NATURAL JOIN CRIME_CHARGES
 	GROUP BY ROLLUP (CLASSIFICATION,CHARGE_STATUS);
@@ -361,44 +335,35 @@ HAVING COUNT (CRIME_ID)>
     (SELECT AVG(COUNT(CRIME_ID)) 
     FROM CRIMES JOIN CRIME_OFFICERS USING (CRIME_ID) 
     GROUP BY OFFICER_ID); 
-b.	 
-2.	List the names of all criminals who have committed less than average number of crimes and aren’t listed as violent offenders.
-a.	SELECT LAST,FIRST 
+
+SELECT LAST,FIRST 
 FROM CRIMINALS JOIN CRIMES USING(CRIMINAL_ID) 
 WHERE V_STATUS='N' GROUP BY FIRST,LAST 
 HAVING COUNT(CRIME_ID)<(SELECT AVG(COUNT(CRIME_ID)) 
 FROM CRIMES 
 GROUP BY CRIMINAL_ID); 
-b.	 
-3.	List appeal information for each appeal that has a less than average number of days between the filing and hearing dates.
-a.	SELECT appeal_id, filing_date, hearing_date, status
+
+SELECT appeal_id, filing_date, hearing_date, status
 FROM appeals
 WHERE (hearing_date - filing_date) < (
 SELECT AVG(hearing_date - filing_date)
 FROM appeals
 );
-b.	 
-4.	List the names of probation officers who have had a less than average number of criminals assigned.
-a.	SELECT FIRST,LAST 
+SELECT FIRST,LAST 
 FROM PROB_OFFICERS 
 JOIN SENTENCES USING (PROB_ID) 
 GROUP BY FIRST,LAST 
-HAVING COUNT (CRIMINAL_ID)<(SELECT AVG(COUNT(CRIMINAL_ID))FROM SENTENCES GROUP BY PROB_ID); 
-b.	 
-5.	List each crime that has had the highest number of appeals recorded.
-a.	SELECT CRIME_ID, COUNT (APPEAL_ID) 
+HAVING COUNT (CRIMINAL_ID)<(SELECT AVG(COUNT(CRIMINAL_ID))FROM SENTENCES GROUP BY PROB_ID); 	 
+SELECT CRIME_ID, COUNT (APPEAL_ID) 
 FROM APPEALS 
 GROUP BY  CRIME_ID 
 HAVING COUNT (APPEAL_ID)=(SELECT MAX(COUNT(APPEAL_ID)) FROM APPEALS GROUP BY CRIME_ID);
-b.	 
-6.	List the information on crime charges for each charge that has had a fine above average and a sum paid below average.
-a.	SELECT *
+SELECT *
 FROM crime_charges
 WHERE fine_amount > (SELECT AVG(fine_amount) FROM crime_charges)
 AND amount_paid < (SELECT AVG(amount_paid) FROM crime_charges);
-b.	 
-7.	List the names of all criminals who have had any of the crime code charges involved in crime ID 10089.
-a.	SELECT criminals.last || ' ' || criminals.first AS Name
+
+SELECT criminals.last || ' ' || criminals.first AS Name
 FROM criminals
 WHERE criminal_id IN(
 	SELECT criminal_id
@@ -407,8 +372,7 @@ WHERE crime_id = 10089
 );
 b.	 
 
-8.	Use a correlated subquery to determine which criminals have had at least one probation period assigned.
-a.	SELECT FIRST,LAST 
+SELECT FIRST,LAST 
 FROM CRIMINALS
 WHERE EXISTS 
 (SELECT SENTENCE_ID 
